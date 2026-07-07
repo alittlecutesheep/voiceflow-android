@@ -33,6 +33,7 @@ import okhttp3.Request
 import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import java.io.File
+import org.json.JSONObject
 import com.github.liuyueyi.quick.transfer.ChineseUtils
 
 class WhisperTranscriber {
@@ -96,10 +97,15 @@ class WhisperTranscriber {
             }
 
             var rawText = response.body!!.string().trim()
-            
+
+            // Voice Flow returns JSON: {"text": "..."}
+            if (speechToTextBackend == context.getString(R.string.settings_option_voiceflow)) {
+                rawText = JSONObject(rawText).getString("text").trim()
+            }
+
             // For NVIDIA NIM, remove quotes if they wrap the text
             // Not sure if this is a bug or a feature...
-            if (speechToTextBackend == context.getString(R.string.settings_option_nvidia_nim) && 
+            if (speechToTextBackend == context.getString(R.string.settings_option_nvidia_nim) &&
                 rawText.startsWith("\"") && rawText.endsWith("\"")) {
                 rawText = rawText.substring(1, rawText.length - 1).trim()
             }
@@ -203,7 +209,9 @@ class WhisperTranscriber {
             val formDataFilename = if (mediaType == "audio/ogg") "@audio.ogg" else "@audio.m4a"
             
             // Add file to payload
-            if (speechToTextBackend == context.getString(R.string.settings_option_openai_api) || 
+            if (speechToTextBackend == context.getString(R.string.settings_option_voiceflow)) {
+                addFormDataPart("audio", formDataFilename, fileBody)
+            } else if (speechToTextBackend == context.getString(R.string.settings_option_openai_api) ||
                 speechToTextBackend == context.getString(R.string.settings_option_nvidia_nim)) {
                 addFormDataPart("file", formDataFilename, fileBody)
             } else if (speechToTextBackend == context.getString(R.string.settings_option_whisper_asr_webservice)) {
@@ -221,7 +229,13 @@ class WhisperTranscriber {
         }.build()
 
         val requestHeaders: Headers = Headers.Builder().apply {
-            if (speechToTextBackend == context.getString(R.string.settings_option_openai_api)) {
+            if (speechToTextBackend == context.getString(R.string.settings_option_voiceflow)) {
+                // Foolproof message
+                if (apiKey == "") {
+                    throw Exception(context.getString(R.string.error_voiceflow_token_unset))
+                }
+                add("Authorization", "Bearer $apiKey")
+            } else if (speechToTextBackend == context.getString(R.string.settings_option_openai_api)) {
                 // Foolproof message
                 if (apiKey == "") {
                     throw Exception(context.getString(R.string.error_apikey_unset))

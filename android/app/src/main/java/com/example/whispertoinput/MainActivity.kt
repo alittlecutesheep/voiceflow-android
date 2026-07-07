@@ -258,7 +258,16 @@ class MainActivity : AppCompatActivity() {
                         // Deal with individual spinner
                         if (parent.id == R.id.spinner_speech_to_text_backend) {
                             val selectedItem = parent.getItemAtPosition(pos)
-                            if (selectedItem == getString(R.string.settings_option_openai_api)) {
+                            if (selectedItem == getString(R.string.settings_option_voiceflow)) {
+                                val endpointEditText: EditText = findViewById<EditText>(R.id.field_endpoint)
+                                if (endpointEditText.text.isEmpty() ||
+                                    endpointEditText.text.toString() == getString(R.string.settings_option_openai_api_default_endpoint) ||
+                                    endpointEditText.text.toString() == getString(R.string.settings_option_whisper_asr_webservice_default_endpoint) ||
+                                    endpointEditText.text.toString() == getString(R.string.settings_option_nvidia_nim_default_endpoint)
+                                ) {
+                                    endpointEditText.setText(getString(R.string.settings_option_voiceflow_default_endpoint))
+                                }
+                            } else if (selectedItem == getString(R.string.settings_option_openai_api)) {
                                 val endpointEditText: EditText = findViewById<EditText>(R.id.field_endpoint)
                                 endpointEditText.setText(getString(R.string.settings_option_openai_api_default_endpoint))
                                 val modelEditText: EditText = findViewById<EditText>(R.id.field_model)
@@ -319,11 +328,12 @@ class MainActivity : AppCompatActivity() {
         CoroutineScope(Dispatchers.Main).launch {
             val settingItems = arrayOf(
                 SettingStringDropdown(R.id.spinner_speech_to_text_backend, SPEECH_TO_TEXT_BACKEND, listOf(
+                    getString(R.string.settings_option_voiceflow),
                     getString(R.string.settings_option_openai_api),
                     getString(R.string.settings_option_whisper_asr_webservice),
                     getString(R.string.settings_option_nvidia_nim)
-                ), getString(R.string.settings_option_openai_api)),
-                SettingText(R.id.field_endpoint, ENDPOINT, getString(R.string.settings_option_openai_api_default_endpoint)),
+                ), getString(R.string.settings_option_voiceflow)),
+                SettingText(R.id.field_endpoint, ENDPOINT, getString(R.string.settings_option_voiceflow_default_endpoint)),
                 SettingText(R.id.field_language_code, LANGUAGE_CODE, getString(R.string.settings_option_openai_api_default_language)),
                 SettingText(R.id.field_api_key, API_KEY),
                 SettingText(R.id.field_model, MODEL, getString(R.string.settings_option_openai_api_default_model)),
