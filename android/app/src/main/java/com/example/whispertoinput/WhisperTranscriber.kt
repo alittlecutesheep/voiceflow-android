@@ -33,6 +33,7 @@ import okhttp3.Request
 import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import java.io.File
+import java.util.concurrent.TimeUnit
 import org.json.JSONObject
 import com.github.liuyueyi.quick.transfer.ChineseUtils
 
@@ -78,7 +79,13 @@ class WhisperTranscriber {
             }
 
             // Make request
-            val client = OkHttpClient()
+            // Generous read timeout: server-side STT on a CPU-only VPS can take
+            // tens of seconds for long recordings or larger models.
+            val client = OkHttpClient.Builder()
+                .connectTimeout(10, TimeUnit.SECONDS)
+                .writeTimeout(60, TimeUnit.SECONDS)
+                .readTimeout(180, TimeUnit.SECONDS)
+                .build()
             val request = buildWhisperRequest(
                 context,
                 filename,
